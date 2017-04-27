@@ -1,0 +1,37 @@
+import Fugue.AWS as AWS
+import Fugue.AWS.EC2 as EC2
+import Fugue.AWS.Pattern.Network as Network
+
+name: 'oregon_devcenter'
+app-region: AWS.Us-west-2
+
+resources: (
+  datacenter
+)
+
+#########################
+# NETWORK
+#########################
+
+datacenter: Network.new {
+  name: "oregon_dev",
+  cidr: "10.0.0.0/16",
+  region: app-region,
+  publicSubnets: [
+     (AWS.A, "10.0.1.0/24")
+  ],
+  privateSubnets: [
+     (AWS.A, "10.0.4.0/24")
+  ],
+  tags: [
+    AWS.tag("Stage", "Production"),
+    AWS.tag("Service", "orgeon_devcenter"),
+    AWS.tag("Name", "oregon_devcenter")
+  ]
+}
+
+
+
+#########################
+# STANDARD SECURITY GROUPS
+#########################

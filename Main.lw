@@ -1,0 +1,65 @@
+composition
+
+import Fugue.AWS as AWS
+import Fugue.AWS.EC2 as EC2
+import Network as Net
+
+network: Net.resources
+
+jumpbox-sg: EC2.SecurityGroup.new {
+  description: "Allow SSH traffic from the Internet",
+  ipPermissions: [
+     EC2.IpPermission.ssh(EC2.IpPermission.Target.ipRange("..../32"))
+  ],
+  ipPermissionsEgress: None,
+  vpc: network.vpc
+}
+
+#########################
+# DEVBOX
+#########################
+devbox: EC2.Instance.new {
+  subnet: List.elementAt(0, network.privateSubnets),
+  image: "ami-4836a428",
+  securityGroups: [devbox-sg],
+  keyName: "devbox",
+  instanceType: EC2.T2_micro,
+  userData: String.readFileUtf8('bootstrap/devbox-amz-linux.sh'),
+  tags: [AWS.tag("Service", "devbox-amazon-linux")]
+}
+
+
+devbox-sg: EC2.SecurityGroup.new {
+  description: "Allow http/s traffic from the Internet",
+  ipPermissions: [
+    EC2.IpPermission.all(EC2.IpPermission.Target.ipRange("10.0.1.5/16"))
+    #EC2.IpPermission.allowAll() #EC2.IpPermission.Target.securityGroup(jumpbox-sg))
+  ],
+  ipPermissionsEgress: None,
+  vpc: network.vpc
+}
+
+#########################
+# JUMPBOX      
+#########################
+jumpbox2a: EC2.Instance.newWithNetworkInterfaces {
+  image: "ami-4836a428",
+  instanceType: EC2.T2_micro,
+  monitoring: True,
+  ebsOptimized: False,
+  keyName: "jumpbox",
+  instanceInitiatedShutdownBehavior: EC2.Terminate,
+  userData: String.readFileUtf8('bootstrap/jumpbox.sh'),
+  tags: [AWS.tag("Service", "jumpbox")],
+  primaryNetworkInterface: EC2.PrimaryInstanceNetworkInterface {
+    associatePublicIpAddress: True,
+    subnet: List.elementAt(0, network.publicSubnets),
+    description: "A network description",
+    securityGroups: [jumpbox-sg],
+    elasticIPs: [
+      EC2.ElasticIpAttachment.new {
+        elasticIP: EC2.ElasticIP.new { region: AWS.Us-west-2 },
+      }
+    ]
+  }
+}
