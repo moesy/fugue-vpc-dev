@@ -1,9 +1,13 @@
-# AmazonLinux Devbox
-A Developer Environment on AmazonLinux running in EC2.
+# fugue-vpc-dev
 
-# Included
+## Summary
+A secure environment to developing applications within an AWS Region.
+
+## Jumpbox 
+hardened server that you "jump" through in order to access other servers on the inner network.
+
+# Devbox
+Instance used to develop GO & Python code.
+
+- Amazon Linux
 - AWS Inspector Agent
-
-### Cloud SDKs
-- AWS CLI
-
